@@ -1,0 +1,20 @@
+version: '3.4'
+
+services:
+    mongodb:
+        image: mongo
+        command:
+            - mongod
+#            - --replSet
+#            - "rs0"
+        expose:
+            - ${MONGO_PORT}
+
+    TS:
+        image: nhex2/ts
+
+        depends_on:        
+            - mongodb
+        ports:
+            - "${TS_WS_PORT}:${TS_WS_PORT}"
+            - "${TS_HTTP_PORT}:${TS_HTTP_PORT}"
