@@ -237,6 +237,9 @@ try {
                     }
                 }
             }
+            if (data?.exec !== undefined) {
+                canvas.doCommands(data?.exec);
+            }
         } catch(err) {
             console.log(err);
         }
