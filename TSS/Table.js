@@ -58,7 +58,21 @@ module.exports = class Table {
    * @param {Client} client dodawany klient
    */
   async addClient(client) {
-    // TODO autoryzacja
+    if (this.allowed !== undefined) {
+      try {
+        if (!(await client.authorizeAgainst(this.allowed))) {
+          client.ws.send(JSON.stringify({success: false,
+            reason: 'authorization failed'}));
+          client.ws.close();
+          return;
+        }
+      } catch (err) {
+        client.ws.send(JSON.stringify({success: false,
+          reason: err.message}));
+        client.ws.close();
+        return;
+      }
+    }
     this.clients.push(client);
     client.ws.on('close', () => {
       const index = this.clients.indexOf(client);
@@ -99,6 +113,24 @@ module.exports = class Table {
       boardId: this.boardId,
       commands: this.commands.concat(this.future),
     }});
+  }
+  /**
+   * Ustawia listę dozwolonych użytkowników.
+   * @param {Array|undefined} users dozwoleni użytkownicy
+   */
+  async setAllowed(users) {
+    this.allowed = users;
+    if (this.allowed !== undefined) {
+      await Promise.all(this.clients.map(async (client) => {
+        try {
+          if (!(await client.authorizeAgainst(this.allowed))) {
+            client.close();
+          }
+        } catch (err) {
+          client.close();
+        }
+      }));
+    }
   }
   /**
    * Zamyka stół
