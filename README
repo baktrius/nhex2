@@ -1,0 +1,5 @@
+How to run nhex2:
+1) ./build_images.sh (only needed once)
+2) docker compose up
+3) connect with browser client
+4) having finished playing, Ctrl-C in order to gently stop docker containers.
