@@ -238,7 +238,7 @@ try {
                         }
                     }
                 }
-            } else {
+            } else if (data?.success === false) {
                 console.error(data?.reason);
                 alert(data?.reason);
             }
