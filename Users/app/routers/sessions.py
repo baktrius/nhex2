@@ -1,6 +1,10 @@
 import redis
+import os
 
-r = redis.Redis(host="Users_redis")
+REDIS_URL = os.getenv("REDIS_URL")
+assert REDIS_URL is not None
+
+r = redis.Redis(host=REDIS_URL)
 
 EXPIRATION_TIMEOUT_MINUTES = 30
 EXPIRATION_TIMEOUT_SECONDS = 60 * EXPIRATION_TIMEOUT_MINUTES

@@ -11,4 +11,5 @@ COPY TS/TableDb.js .
 
 RUN npm install
 
-CMD node index.js ${WS_PORT} ${HTTP_PORT}
+ENTRYPOINT ["node", "index.js"]
+#CMD ["${WS_PORT}", "${HTTP_PORT}"]

@@ -1,0 +1,20 @@
+FROM node:latest
+
+ENV WS_PORT 8080
+ENV HTTP_CONTROL_PORT 8081
+ENV MASTER_ADDR ""
+ENV USERS_ADDR ""
+
+WORKDIR /nhex/TSS
+
+COPY TSS/index.js .
+COPY TSS/package.json .
+COPY TSS/Table.js .
+COPY TSS/Users.js .
+COPY TSS/Client.js .
+
+RUN npm install
+
+ENTRYPOINT ["node", "index.js"]
+#CMD ["${HTTP_CONTROL_PORT}", "${WS_PORT}"]
+
