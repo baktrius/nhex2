@@ -55,6 +55,8 @@ services:
         depends_on:
             - Users_mongo
             - Users_redis
+        ports:
+            - "8001:${USERS_PORT}" # this is just for testing
         expose:
             - "${USERS_PORT}"
 #        ports:

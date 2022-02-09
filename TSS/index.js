@@ -1,6 +1,8 @@
 'use strict';
 const ws = require('ws');
 const express = require('express');
+const process = require('process');
+const promisify = require('util').promisify;
 const Table = require('./Table.js');
 const Client = require('./Client.js');
 
@@ -146,8 +148,27 @@ async function run() {
   const wss = new ws.WebSocketServer({port: CLIENTS_PORT});
   wss.on('connection', wsConnectionHandler);
 
-  app.listen(CONTROL_PORT, () => {});
+  const serwer = app.listen(CONTROL_PORT, () => {});
   console.log('ready');
+  /**
+   * Obsługuje sygnał wyłączenia aplikacji.
+   * @param {*} signal otrzymany sygnał
+   */
+  async function handleQuit(signal) {
+    try {
+      tables.forEach((table) => table.close());
+      await Promise.all([
+        promisify(wss.close)(),
+        promisify(serwer.close)(),
+      ]);
+    } catch (err) {
+      console.log(err.message);
+      process.exit(1);
+    }
+    process.exit(0);
+  }
+
+  process.on('SIGTERM', handleQuit);
 }
 
 run().catch(console.dir);

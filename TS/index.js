@@ -1,6 +1,8 @@
 'use strict';
 const ws = require('ws');
 const express = require('express');
+const process = require('process');
+const promisify = require('util').promisify;
 const TableDb = require('./TableDb.js');
 
 const WS_PORT = parseInt(process.argv[2]);
@@ -133,7 +135,26 @@ async function run() {
   const wss = new ws.WebSocketServer({port: WS_PORT});
   wss.on('connection', wsConnectionHandler);
 
-  app.listen(HTTP_PORT, () => {});
+  const serwer = app.listen(HTTP_PORT, () => {});
+  /**
+   * Obsługuje sygnał wyłączenia aplikacji.
+   * @param {*} signal otrzymany sygnał
+   */
+  async function handleQuit(signal) {
+    try {
+      await Promise.all([
+        promisify(wss.close)(),
+        promisify(serwer.close)(),
+        tableDb.close(),
+      ]);
+    } catch (err) {
+      console.log(err.message);
+      process.exit(1);
+    }
+    process.exit(0);
+  }
+
+  process.on('SIGTERM', handleQuit);
 }
 
 run().catch(console.dir);
