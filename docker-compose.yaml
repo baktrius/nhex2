@@ -13,7 +13,7 @@ services:
     TS:
         image: nhex2/ts
 
-        depends_on:        
+        depends_on:
             - mongodb
         ports:
             - "${TS_WS_PORT}:${TS_WS_PORT}"
