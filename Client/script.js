@@ -11,6 +11,21 @@ const statusEl = document.getElementById('status');
 const urlParams = new URLSearchParams(window.location.search);
 const wsBackend = urlParams.get('wsBackend');
 
+function parseHash() {
+    try {
+        if (window.location.hash != '') {
+            const [x, y, zoom] = window.location.hash.substring(1).split(',');
+            viewXEl.value = x;
+            viewYEl.value = y;
+            zoomEl.value = zoom;
+        }
+    } catch (err) {
+        console.log('unable to parse hash', err.message);
+    }
+}
+
+parseHash();
+
 function setStatus(message) {
     statusEl.innerText = message;
 }
@@ -155,19 +170,44 @@ function updateCanvas() {
     futureCanvas.resize(canvasWrapperEl.clientWidth, canvasWrapperEl.clientHeight);
 }
 
+function updateHash() {
+    window.location.hash = `#${viewXEl.value},${viewYEl.value},${zoomEl.value}`;
+}
+
 window.addEventListener('resize', updateCanvas);
 viewXEl.addEventListener('input', () => {
-    canvas.setCenter(viewXEl.value, null);
-    futureCanvas.setCenter(viewXEl.value, null);
+    updateHash();
 })
 viewYEl.addEventListener('input', () => {
-    canvas.setCenter(null, viewYEl.value);
-    futureCanvas.setCenter(null, viewYEl.value);
+    updateHash();
 })
 zoomEl.addEventListener('input', () => {
+    updateHash();
+})
+
+window.addEventListener('keydown', (event) => {
+    const action = {
+        ArrowLeft: () => viewXEl.value = parseInt(viewXEl.value) - 10,
+        ArrowRight: () => viewXEl.value = parseInt(viewXEl.value) + 10,
+        ArrowUp: () => viewYEl.value = parseInt(viewYEl.value) - 10,
+        ArrowDown: () => viewYEl.value = parseInt(viewYEl.value) + 10,
+        '-': () => zoomEl.value = max(parseFloat(zoomEl.value) - 0.1, 0.01),
+        '=': () => zoomEl.value = parseFloat(zoomEl.value) + 0.1,
+    }[event.key];
+    if (action !== undefined) {
+        action();
+        updateHash();
+    }
+})
+
+window.addEventListener('hashchange', () => {
+    console.log('hash change');
+    parseHash();
+    canvas.setCenter(viewXEl.value, viewYEl.value);
+    futureCanvas.setCenter(viewXEl.value, viewYEl.value);
     canvas.setZoom(zoomEl.value);
     futureCanvas.setZoom(zoomEl.value);
-})
+});
 
 // pobranie początkowego koloru i wielkości
 updateCanvas();
