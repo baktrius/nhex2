@@ -106,7 +106,7 @@ app.post('/board/:boardId/close', async (req, res) => {
 /**
  * Obsługuje utworzone połączenie ws
  * @param {*} ws utworzony websocket
- * @param {*} req rządnie http inicjujące połączenie ws
+ * @param {*} req żądanie http inicjujące połączenie ws
  */
 async function wsConnectionHandler(ws, req) {
   const url = req.url;

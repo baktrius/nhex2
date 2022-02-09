@@ -18,6 +18,23 @@ services:
         expose:
             - "${TS_WS_PORT}"
             - "${TS_HTTP_PORT}"
+        ports:
+            - "8000:${TS_HTTP_PORT}" # this is just for initiating board on TS
+        command:
+            ["${TS_WS_PORT}", "${TS_HTTP_PORT}"]
+
+    TSS:
+        image: nhex2/tss
+        depends_on:
+            - TS
+        expose:
+            - "${TSS_WS_PORT}"
+            - "${TSS_HTTP_CONTROL_PORT}"
+        ports:
+              - "${TSS_WS_PORT}:${TSS_WS_PORT}"
+              - "${TSS_HTTP_CONTROL_PORT}:${TSS_HTTP_CONTROL_PORT}"
+        command:
+            ["${TSS_HTTP_CONTROL_PORT}", "${TSS_WS_PORT}", "TM", "Users"]
 
     Users_mongo:
         image: mongo
@@ -38,5 +55,7 @@ services:
         depends_on:
             - Users_mongo
             - Users_redis
-        ports:
-            - "${USERS_PORT}:${USERS_PORT}"
+        expose:
+            - "${USERS_PORT}"
+#        ports:
+#            - "${USERS_PORT}:${USERS_PORT}"
