@@ -10,13 +10,8 @@ services:
         expose:
             - ${MONGO_PORT}
 
-    Users_redis:
-        image: redis
-        expose:
-            - "6379"
-
-    Users:
-        image: nhex2/users
+    TS:
+        image: nhex2/ts
         depends_on:
             - TS_mongo
         expose:
