@@ -1,7 +1,7 @@
 version: '3.4'
 
 services:
-    mongodb:
+    TS_mongo:
         image: mongo
         command:
             - mongod
@@ -14,7 +14,29 @@ services:
         image: nhex2/ts
 
         depends_on:
-            - mongodb
+            - TS_mongo
+        expose:
+            - "${TS_WS_PORT}"
+            - "${TS_HTTP_PORT}"
+
+    Users_mongo:
+        image: mongo
+        command:
+            - mongod
+#            - --replSet
+#            - "rs0"
+        expose:
+            - ${MONGO_PORT}
+
+    Users_redis:
+        image: redis
+        expose:
+            - "6379"
+
+    Users:
+        image: nhex2/users
+        depends_on:
+            - Users_mongo
+            - Users_redis
         ports:
-            - "${TS_WS_PORT}:${TS_WS_PORT}"
-            - "${TS_HTTP_PORT}:${TS_HTTP_PORT}"
+            - "${USERS_PORT}:${USERS_PORT}"
