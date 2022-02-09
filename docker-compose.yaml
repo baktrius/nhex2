@@ -10,9 +10,13 @@ services:
         expose:
             - ${MONGO_PORT}
 
-    TS:
-        image: nhex2/ts
+    Users_redis:
+        image: redis
+        expose:
+            - "6379"
 
+    Users:
+        image: nhex2/users
         depends_on:
             - TS_mongo
         expose:
@@ -59,5 +63,5 @@ services:
             - "8001:${USERS_PORT}" # this is just for testing
         expose:
             - "${USERS_PORT}"
-#        ports:
-#            - "${USERS_PORT}:${USERS_PORT}"
+#         ports:
+#             - "${USERS_PORT}:${USERS_PORT}"
