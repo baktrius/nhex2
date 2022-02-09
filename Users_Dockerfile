@@ -1,0 +1,14 @@
+FROM python:3.10
+
+WORKDIR /nhex/Users
+
+COPY Users/requirements.txt .
+
+RUN pip install --no-cache-dir --upgrade -r requirements.txt
+
+COPY Users/app ./app
+
+ENV SECRET_KEY temporary_solution
+ENV DATABASE_URL Users_mongo
+
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8080"]
