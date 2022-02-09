@@ -10,6 +10,7 @@ const zoomEl = document.getElementById('zoom');
 const statusEl = document.getElementById('status');
 const urlParams = new URLSearchParams(window.location.search);
 const wsBackend = urlParams.get('wsBackend');
+const token = urlParams.get('token');
 
 function parseHash() {
     try {
@@ -244,7 +245,8 @@ let redrawService = false;
 
 setStatus('connecting...');
 try {
-    const ws = new WebSocket(wsBackend);
+    console.log(wsBackend + (token ? `?token=${token}` : ''));
+    const ws = new WebSocket(wsBackend + (token ? `?token=${token}` : ''));
     ws.onopen = () => {
         setStatus('loading data...');
     };
@@ -276,6 +278,12 @@ try {
                         }
                     }
                 }
+            } else {
+                console.error(data?.reason);
+                alert(data?.reason);
+            }
+            if (data?.exec !== undefined) {
+                canvas.doCommands(data?.exec);
             }
         } catch(err) {
             console.log(err);

@@ -7,8 +7,7 @@ const WS_PORT = parseInt(process.argv[2]);
 const HTTP_PORT = parseInt(process.argv[3]);
 // const DB_USERNAME = 'TS';
 // const DB_PASSWORD = 'abba';
-const DB_HOST = 'mongodb';
-// const DB_HOST = 'localhost';
+const DB_HOST = process.argv?.[4] ?? 'TS_mongo';
 const DB_PORT = '27017';
 const DB_OPTIONS = 'maxPoolSize=20&w=majority';
 const DB_CONNECTION_STRING = `mongodb://${DB_HOST}:${DB_PORT}/?${DB_OPTIONS}`;
@@ -88,6 +87,42 @@ app.post('/board/:boardId/append', async (req, res) => {
 });
 
 /**
+ * Obsługuje utworzone połączenie ws
+ * @param {*} ws utworzony websocket
+ * @param {*} req rządnie http inicjujące połączenie ws
+ */
+async function wsConnectionHandler(ws, req) {
+  const url = req.url;
+  const method = req.method;
+  const boardId = url.match(/^\/board\/([0-9]+)$/)?.[1];
+  if (boardId !== undefined && method.toUpperCase() === 'GET') {
+    try {
+      ws.send(JSON.stringify({success: true, data: await getBoard(boardId)}));
+      ws.on('message', async (mes) => {
+        try {
+          const commands = JSON.parse(mes);
+          if (!await tableDb.appendToBoard(boardId, commands)) {
+            throw new Error(
+                'Unable to append commands to board with specified id');
+          }
+          ws.send(JSON.stringify({success: true, message: mes.toString()}));
+        } catch (err) {
+          ws.send(JSON.stringify({success: false,
+            message: mes.toString(), reason: err?.message}));
+        }
+      });
+    } catch (err) {
+      ws.send(JSON.stringify({success: false,
+        reason: 'Board with specified id is missing.'}));
+      ws.terminate();
+    }
+  } else {
+    ws.send(JSON.stringify({success: false, reason: 'unspecified board'}));
+    ws.terminate();
+  }
+}
+
+/**
  * Główna funkcja programu
  */
 async function run() {
@@ -96,36 +131,7 @@ async function run() {
   console.log('connection with db established');
   // ws api
   const wss = new ws.WebSocketServer({port: WS_PORT});
-  wss.on('connection', async (ws, req) => {
-    const url = req.url;
-    const method = req.method;
-    const boardId = url.match(/^\/board\/([0-9]+)$/)?.[1];
-    if (boardId !== undefined && method.toUpperCase() === 'GET') {
-      try {
-        ws.send(JSON.stringify({success: true, data: await getBoard(boardId)}));
-        ws.on('message', async (mes) => {
-          try {
-            const commands = JSON.parse(mes);
-            if (!await tableDb.appendToBoard(boardId, commands)) {
-              throw new Error(
-                  'Unable to append commands to board with specified id');
-            }
-            ws.send(JSON.stringify({success: true, message: mes.toString()}));
-          } catch (err) {
-            ws.send(JSON.stringify({success: false,
-              message: mes.toString(), reason: err?.message}));
-          }
-        });
-      } catch (err) {
-        ws.send(JSON.stringify({success: false,
-          reason: 'Board with specified id is missing.'}));
-        ws.terminate();
-      }
-    } else {
-      ws.send(JSON.stringify({success: false, reason: 'unspecified board'}));
-      ws.terminate();
-    }
-  });
+  wss.on('connection', wsConnectionHandler);
 
   app.listen(HTTP_PORT, () => {});
 }
