@@ -4,11 +4,9 @@ const express = require('express');
 const process = require('process');
 const TableDb = require('./TableDb.js');
 
-const WS_PORT = parseInt(process.argv[2]);
-const HTTP_PORT = parseInt(process.argv[3]);
-// const DB_USERNAME = 'TS';
-// const DB_PASSWORD = 'abba';
-const DB_HOST = process.argv?.[4] ?? 'TS_mongo';
+const WS_PORT = parseInt(process.env.TS_WS_PORT);
+const HTTP_PORT = parseInt(process.env.TS_HTTP_PORT);
+const DB_HOST = 'TS_mongo';
 const DB_PORT = '27017';
 const DB_OPTIONS = 'maxPoolSize=20&w=majority';
 const DB_CONNECTION_STRING = `mongodb://${DB_HOST}:${DB_PORT}/?${DB_OPTIONS}`;

@@ -15,23 +15,26 @@ services:
         expose:
             - "${TS_WS_PORT}"
             - "${TS_HTTP_PORT}"
-        ports:
-            - "8000:${TS_HTTP_PORT}" # this is just for initiating board on TS
-        command:
-            ["${TS_WS_PORT}", "${TS_HTTP_PORT}"]
+        environment:
+            TS_WS_PORT: "${TS_WS_PORT}"
+            TS_HTTP_PORT: "${TS_HTTP_PORT}"
 
-    TSS:
+    TSS1:
         image: nhex2/tss
         depends_on:
-            - TS
+            TM:
+                condition: service_started
         expose:
-            - "${TSS_WS_PORT}"
-            - "${TSS_HTTP_CONTROL_PORT}"
+            - "${TSS1_EXTERNAL_CONTROL_ADDR}"
+        environment:
+            TSS_INTERNAL_CONTROL_PORT: ${TSS_INTERNAL_CONTROL_PORT}
+            TSS_INTERNAL_CLIENTS_PORT: ${TSS_INTERNAL_CLIENTS_PORT}
+            TSS_EXTERNAL_CONTROL_ADDR: ${TSS1_EXTERNAL_CONTROL_ADDR}
+            TSS_EXTERNAL_CLIENTS_ADDR: ${TSS1_EXTERNAL_CLIENTS_ADDR}
+            TM_TSS_PORT: ${TM_TSS_PORT}
+            USERS_PORT: ${USERS_PORT}
         ports:
-              - "${TSS_WS_PORT}:${TSS_WS_PORT}"
-              - "${TSS_HTTP_CONTROL_PORT}:${TSS_HTTP_CONTROL_PORT}"
-        command:
-            ["${TSS_HTTP_CONTROL_PORT}", "${TSS_WS_PORT}", "TM", "Users"]
+              - "${TSS_INTERNAL_CLIENTS_PORT}:${TSS_INTERNAL_CLIENTS_PORT}"
 
     TM_maria:
         image: mariadb
@@ -39,8 +42,6 @@ services:
             - "${MARIA_PORT}"
         environment:
             MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: true
-#            MARIADB_DATABASE: tables
-#            MARIADB_ROOT_HOST: TM
         healthcheck:
             test: [ "CMD", "/usr/bin/mysql", "--execute", "SHOW DATABASES;"]
             interval: 5s
@@ -60,8 +61,6 @@ services:
             - "${TM_TSS_PORT}"
             - "${TM_APP_PORT}"
         environment:
-            TSS_HTTP_CONTROL_PORT: "${TSS_HTTP_CONTROL_PORT}"
-            TSS_WS_PORT: "${TSS_WS_PORT}"
             TS_HTTP_PORT: "${TS_HTTP_PORT}"
             TS_WS_PORT: "${TS_WS_PORT}"
             TM_TSS_PORT: "${TM_TSS_PORT}"
