@@ -1,0 +1,17 @@
+FROM node:latest
+
+ENV WS_PORT 8080
+ENV HTTP_PORT 8081
+
+WORKDIR /nhex/TM
+
+COPY TM/package.json .
+COPY TM/index.js .
+COPY TM/TS.js .
+COPY TM/TSS.js .
+COPY TM/TableDb.js .
+
+RUN npm install
+
+ENTRYPOINT ["node", "index.js"]
+#CMD ["${WS_PORT}", "${HTTP_PORT}"]

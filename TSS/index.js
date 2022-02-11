@@ -7,12 +7,14 @@ const Table = require('./Table.js');
 const Client = require('./Client.js');
 
 const HEART_BEAT_INTERVAL = 15000;
-const CONTROL_PORT = parseInt(process.argv[2]);
-const CLIENTS_PORT = parseInt(process.argv[3]);
-const MASTER_ADDR = process.argv[4];
-const USERS_ADDR = process.argv[5];
-const CONTROL_ADDR = process.argv[6];
-const CLIENTS_ADDR = process.argv[7];
+
+const TSS_INTERNAL_CONTROL_PORT = parseInt(process.env.TSS_INTERNAL_CONTROL_PORT);
+const TSS_INTERNAL_CLIENTS_PORT = parseInt(process.env.TSS_INTERNAL_CLIENTS_PORT);
+const TSS_EXTERNAL_CONTROL_ADDR = process.env.TSS_EXTERNAL_CONTROL_ADDR;
+const TSS_EXTERNAL_CLIENTS_ADDR = process.env.TSS_EXTERNAL_CLIENTS_ADDR;
+
+const MASTER_ADDR = `http://TM:${process.env.TM_TSS_PORT}`;
+const USERS_ADDR = `http://Users:${process.env.USERS_PORT}`;
 
 /**
  * Wyświetla komunikat błędu i kończy program.
@@ -153,8 +155,8 @@ async function sendInfo() {
     const response = await axios(`/info`, {
       method: 'post',
       data: {
-        control: CONTROL_ADDR,
-        users: CLIENTS_ADDR,
+        control: TSS_EXTERNAL_CONTROL_ADDR,
+        users: TSS_EXTERNAL_CLIENTS_ADDR,
         tables: JSON.stringify([...tables.entries()].map(([id]) => id)),
       },
       baseURL: MASTER_ADDR,
@@ -183,11 +185,11 @@ async function sendInfo() {
  */
 async function run() {
   // clients api
-  const wss = new ws.WebSocketServer({port: CLIENTS_PORT});
+  const wss = new ws.WebSocketServer({port: TSS_INTERNAL_CLIENTS_PORT});
   wss.on('connection', wsConnectionHandler);
   console.log('setting up control endpoint');
   const serwer = await new Promise((resolve) => {
-    const temp = app.listen(CONTROL_PORT, () => {
+    const temp = app.listen(TSS_INTERNAL_CONTROL_PORT, () => {
       resolve(temp);
     });
   });
