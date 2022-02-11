@@ -5,8 +5,6 @@ services:
         image: mongo
         command:
             - mongod
-#            - --replSet
-#            - "rs0"
         expose:
             - ${MONGO_PORT}
 
@@ -35,12 +33,46 @@ services:
         command:
             ["${TSS_HTTP_CONTROL_PORT}", "${TSS_WS_PORT}", "TM", "Users"]
 
+    TM_maria:
+        image: mariadb
+        expose:
+            - "${MARIA_PORT}"
+        environment:
+            MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: true
+#            MARIADB_DATABASE: tables
+#            MARIADB_ROOT_HOST: TM
+        healthcheck:
+            test: [ "CMD", "/usr/bin/mysql", "--execute", "SHOW DATABASES;"]
+            interval: 5s
+            timeout: 1s
+            retries: 5
+        command:
+            "--init-file /data/application/init.sql"
+        volumes:
+            - ./init.sql:/data/application/init.sql
+
+    TM:
+        image: nhex2/tm
+        depends_on:
+            TM_maria:
+                condition: service_healthy
+        expose:
+            - "${TM_TSS_PORT}"
+            - "${TM_APP_PORT}"
+        environment:
+            TSS_HTTP_CONTROL_PORT: "${TSS_HTTP_CONTROL_PORT}"
+            TSS_WS_PORT: "${TSS_WS_PORT}"
+            TS_HTTP_PORT: "${TS_HTTP_PORT}"
+            TS_WS_PORT: "${TS_WS_PORT}"
+            TM_TSS_PORT: "${TM_TSS_PORT}"
+            TM_APP_PORT: "${TM_APP_PORT}"
+        ports:
+            - "6666:${TM_APP_PORT}"
+
     Users_mongo:
         image: mongo
         command:
             - mongod
-#            - --replSet
-#            - "rs0"
         expose:
             - ${MONGO_PORT}
 
