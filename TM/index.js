@@ -15,7 +15,7 @@ const DB_HOST = process.env.TM_DB_HOST ?? 'TM_maria';
 const TSSs = new Map();
 // lista TSów skonfigurowanych w systemie
 const TSs = [
-  new TS('http://127.0.0.1:8000', 'ws://127.0.0.1:8080'),
+  new TS('http://ts:8081', 'ws://ts:8080'),
 ];
 
 const tableDb = new TableDb(`mariadb://TM@${DB_HOST}:3306/tables`);

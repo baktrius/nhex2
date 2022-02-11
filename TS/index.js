@@ -35,10 +35,6 @@ async function getBoard(id) {
   }
 }
 
-if (process.argv.length < 4) {
-  fatal('four args expected');
-}
-
 // obiekt umożliwiający operacje na bazie danych
 const tableDb = new TableDb(DB_CONNECTION_STRING, DB_NAME);
 

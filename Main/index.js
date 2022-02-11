@@ -10,19 +10,16 @@ const app = express();
 
 app.use('/auth', proxy(USERS_ADDR, {
   proxyReqPathResolver: function(req) {
-    console.log(req.path);
     return '/auth' + req.path;
   },
 }));
 app.use('/board', proxy(TM_ADDR, {
   proxyReqPathResolver: function(req) {
-    console.log(req.path);
     return '/board' + req.path;
   },
 }));
 app.use('/boards', proxy(TM_ADDR, {
   proxyReqPathResolver: function(req) {
-    console.log(req.path);
     return '/boards' + req.path;
   },
 }));
