@@ -50,7 +50,7 @@ async function closeBoard(boardId) {
 async function reloadBoard(boardId, backend, allowedUsers) {
   if (tables.has(boardId)) {
     const current = tables.get(boardId);
-    if (current.backend === backend) {
+    if (current.backup === backend) {
       await current.setAllowed(allowedUsers);
       return;
     }

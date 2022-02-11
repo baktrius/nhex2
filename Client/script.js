@@ -9,7 +9,25 @@ const viewYEl = document.getElementById('viewY');
 const zoomEl = document.getElementById('zoom');
 const statusEl = document.getElementById('status');
 const urlParams = new URLSearchParams(window.location.search);
-const wsBackend = urlParams.get('wsBackend');
+const tableId = urlParams.get('id');
+
+async function postData(url = '', data = {}) {
+    // Default options are marked with *
+    const response = await fetch(url, {
+        method: 'POST', // *GET, POST, PUT, DELETE, etc.
+        mode: 'cors', // no-cors, *cors, same-origin
+        cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+        credentials: 'same-origin', // include, *same-origin, omit
+        headers: {
+            'Content-Type': 'application/json'
+            // 'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        redirect: 'follow', // manual, *follow, error
+        referrerPolicy: 'no-referrer', // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
+        body: JSON.stringify(data) // body data type must match "Content-Type" header
+    });
+    return response.json(); // parses JSON response into native JavaScript objects
+}
 const token = urlParams.get('token');
 
 function parseHash() {
@@ -243,8 +261,12 @@ futureCanvasEl.addEventListener('mousedown', (event) => {
 
 let redrawService = false;
 
-setStatus('connecting...');
-try {
+async function run() {
+    setStatus('obtaining address...');
+    const response = await postData(`board/${tableId}/join`);
+    console.log(response);
+    const wsBackend = response.link;
+    console.log('connecting...');
     console.log(wsBackend + (token ? `?token=${token}` : ''));
     const ws = new WebSocket(wsBackend + (token ? `?token=${token}` : ''));
     ws.onopen = () => {
@@ -292,6 +314,6 @@ try {
     ws.onclose = () => {
         setStatus('connection lost');
     }
-} catch (err) {
-    console.log(err);
 }
+
+run().catch(console.error);

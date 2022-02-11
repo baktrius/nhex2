@@ -9,7 +9,7 @@ const TableDb = require('./TableDb.js');
 const TSS_PORT = process.env.TM_TSS_PORT;
 // port na którym Main przysyła żądania od klientów
 const APP_PORT = process.env.TM_APP_PORT;
-const DB_HOST = /*process.argv?.[4] ??*/ 'TM_maria';
+const DB_HOST = process.env.TM_DB_HOST ?? 'TM_maria';
 
 // lista aktywnych TSSów
 const TSSs = new Map();
@@ -142,6 +142,8 @@ app.get('/boards', (req, res) => {
         [...tss.tables.entries()].map(([id]) => id),
       ]));
 });
+
+app.use(express.static('../Client'));
 
 const app2 = express();
 app2.use(express.json());

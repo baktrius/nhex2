@@ -18,11 +18,13 @@ body {
     background-color: black;
 }
 
-#title {
+#title a {
     font-weight: bold;
     font-size: larger;
     padding-left: 10px;
     padding-right: 10px;
+    color: white;
+    text-decoration: none;
 }
 
 .tool {
