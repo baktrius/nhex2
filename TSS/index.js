@@ -11,9 +11,8 @@ const CONTROL_PORT = parseInt(process.argv[2]);
 const CLIENTS_PORT = parseInt(process.argv[3]);
 const MASTER_ADDR = process.argv[4];
 const USERS_ADDR = process.argv[5];
-const THIS_BASE_ADDR = process.argv[6];
-const CONTROL_PROTOCOL = process.argv[7] ?? 'http';
-const CLIENTS_PROTOCOL = process.argv[8] ?? 'ws';
+const CONTROL_ADDR = process.argv[6];
+const CLIENTS_ADDR = process.argc[7];
 
 /**
  * Wyświetla komunikat błędu i kończy program.
@@ -154,8 +153,8 @@ async function sendInfo() {
     const response = await axios(`/info`, {
       method: 'post',
       data: {
-        control: `${CONTROL_PROTOCOL}://${THIS_BASE_ADDR}:${CONTROL_PORT}`,
-        users: `${CLIENTS_PROTOCOL}://${THIS_BASE_ADDR}:${CLIENTS_PORT}`,
+        control: CONTROL_ADDR,
+        users: CLIENTS_ADDR,
         tables: JSON.stringify([...tables.entries()].map(([id]) => id)),
       },
       baseURL: MASTER_ADDR,
