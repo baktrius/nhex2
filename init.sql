@@ -1,0 +1,3 @@
+CREATE OR REPLACE USER 'TM'@'%';
+CREATE DATABASE IF NOT EXISTS tables;
+GRANT ALL privileges ON tables.* TO 'TM'@'%';
