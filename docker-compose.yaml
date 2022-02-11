@@ -60,6 +60,10 @@ services:
             - "${TM_TSS_PORT}"
             - "${TM_APP_PORT}"
         environment:
+            TSS_HTTP_CONTROL_PORT: "${TSS_HTTP_CONTROL_PORT}"
+            TSS_WS_PORT: "${TSS_WS_PORT}"
+            TS_HTTP_PORT: "${TS_HTTP_PORT}"
+            TS_WS_PORT: "${TS_WS_PORT}"
             TM_TSS_PORT: "${TM_TSS_PORT}"
             TM_APP_PORT: "${TM_APP_PORT}"
         ports:

@@ -15,7 +15,8 @@ const DB_HOST = /*process.argv?.[4] ??*/ 'TM_maria';
 
 // lista aktywnych TSSów
 const TSSs = [
-  new TSS('http://TSS:8081', 'ws://TSS:8080'),
+  new TSS(`http://TSS:${process.env.TSS_HTTP_CONTROL_PORT}}`,
+      `ws://TSS:${process.env.TSS_WS_PORT}`),
 ];
 // lista TSów skonfigurowanych w systemie
 const TSs = [
