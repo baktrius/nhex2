@@ -12,7 +12,7 @@ const CLIENTS_PORT = parseInt(process.argv[3]);
 const MASTER_ADDR = process.argv[4];
 const USERS_ADDR = process.argv[5];
 const CONTROL_ADDR = process.argv[6];
-const CLIENTS_ADDR = process.argc[7];
+const CLIENTS_ADDR = process.argv[7];
 
 /**
  * Wyświetla komunikat błędu i kończy program.
