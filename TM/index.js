@@ -6,9 +6,10 @@ const TS = require('./TS.js');
 const TableDb = require('./TableDb.js');
 
 // port na którym TSSy łączą się do TMa
-const TSS_PORT = process.argv[2];
-// port na którym main przysyła żądania od klientów
-const APP_PORT = process.argv[3];
+const TSS_PORT = process.env.TM_TSS_PORT;
+// port na którym Main przysyła żądania od klientów
+const APP_PORT = process.env.TM_APP_PORT;
+const DB_HOST = /*process.argv?.[4] ??*/ 'TM_maria';
 
 // lista aktywnych TSSów
 const TSSs = new Map();
@@ -17,7 +18,7 @@ const TSs = [
   new TS('http://127.0.0.1:8000', 'ws://127.0.0.1:8080'),
 ];
 
-const tableDb = new TableDb('mariadb://TM:@127.0.0.1:3306/tables');
+const tableDb = new TableDb(`mariadb://TM@${DB_HOST}:3306/tables`);
 
 /**
  * Wybiera najlepszy TS dla zadanego żądania utworzenia stołu.
