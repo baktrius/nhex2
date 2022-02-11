@@ -5,14 +5,20 @@
     <title>
       Register
     </title>
+    <link rel="stylesheet" href="form.css">
   </head>
   <body>
+    <div id="box">
+      <h1>Register form</h1>
+      <form method="post" action="auth/register" id="registerForm">
+        <h4>Login</h4>
+        <input type="text" name="username" placeholder="login" required>
+        <h4>Password</h4>
+        <input type="password" name="password" placeholder="password" required>
+        <input type="submit" value="register">
+      </form>
+    </div>
     <h1>Register Form</h1>
-    <form method="post" action="auth/register" id="registerForm">
-      <input type="text" name="login" placeholder="login" required>
-      <input type="password" name="password" placeholder="password" required>
-      <input type="submit" value="register">
-    </form>
     <script src="register.js"></script>
   </body>
 </html>

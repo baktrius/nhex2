@@ -3,15 +3,46 @@
   <head>
     <meta charset="utf8">
     <style>
+      body {
+        background-color: black;
+      }
+      #box {
+        background-color: white;
+        padding: 20px;
+        max-width: 600px;
+        position: relative;
+        border-radius: 5px;
+        left: 50%;
+        top: 50vh;
+        transform: translate(-50%, -50%);
+      }
       #tables {
         margin-top: 10px;
         width: 100%;
         border-collapse: collapse;
       }
       #tables td, #tables th {
+        width: 50%;
         padding: 2px;
         border: solid black 1px;
         text-align: center; 
+      }
+      input {
+        width: 100%;
+        padding: 2px;
+        margin-bottom: 10px;
+        box-sizing: border-box;
+      }
+      button {
+        padding: 2px 10px 2px 10px;
+      }
+      h4 {
+        margin: 2px;
+        margin-left: 0px;
+      }
+      h1 {
+        margin-top: 30px;
+        margin-bottom: 40px;
       }
     </style>
     <title>
@@ -19,24 +50,27 @@
     </title>
   </head>
   <body>
-    <h1>White boards</h1>
-    <h2>Create board</h2>
-    <form method="post" action="board/create" id="createTableForm">
-      <input type="text" name="name" placeholder="board name">
-      <input type="submit" value="create and join">
-    </form>
-    <h2>Active boards</h2>
-    <table id="tables">
-      <thead>
-        <tr>
-          <th>board name</th>
-          <th>actions</th>
-        </tr>
-      </thead>
-      <tbody id="tablesHolder">
+    <div id="box">
+      <h1>White boards</h1>
+      <h2>Create board</h2>
+      <form method="post" action="board/create" id="createTableForm">
+        <h4>Board name</h4>
+        <input type="text" name="name" placeholder="board name">
+        <input type="submit" value="create and join">
+      </form>
+      <h2>Active boards</h2>
+      <table id="tables">
+        <thead>
+          <tr>
+            <th>board name</th>
+            <th>actions</th>
+          </tr>
+        </thead>
+        <tbody id="tablesHolder">
 
-      </tbody>
-    </table>
+        </tbody>
+      </table>
+    </div>
     <script src="index.js"></script>
   </body>
 </html>
