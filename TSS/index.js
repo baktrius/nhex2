@@ -2,14 +2,17 @@
 const ws = require('ws');
 const express = require('express');
 const process = require('process');
-const promisify = require('util').promisify;
+const axios = require('axios');
 const Table = require('./Table.js');
 const Client = require('./Client.js');
 
+const HEART_BEAT_INTERVAL = 15000;
 const CONTROL_PORT = parseInt(process.argv[2]);
 const CLIENTS_PORT = parseInt(process.argv[3]);
 const MASTER_ADDR = process.argv[4];
 const USERS_ADDR = process.argv[5];
+const CONTROL_ADDR = process.argv[6];
+const CLIENTS_ADDR = process.argv[7];
 
 /**
  * Wyświetla komunikat błędu i kończy program.
@@ -33,7 +36,6 @@ async function closeBoard(boardId) {
   if (tables.has(boardId)) {
     const current = tables.get(boardId);
     await current.close();
-    tables.delete(boardId);
     return true;
   }
   return false;
@@ -48,13 +50,15 @@ async function closeBoard(boardId) {
 async function reloadBoard(boardId, backend, allowedUsers) {
   if (tables.has(boardId)) {
     const current = tables.get(boardId);
-    if (current.backend === backend) {
+    if (current.backup === backend) {
       await current.setAllowed(allowedUsers);
       return;
     }
     await closeBoard(boardId);
   }
-  const future = new Table(backend);
+  const future = new Table(backend, () => {
+    tables.delete(boardId);
+  });
   await future.connect();
   await future.setAllowed(allowedUsers);
   tables.set(boardId, future);
@@ -66,6 +70,7 @@ const app = express();
 app.post('/board/:boardId/load', async (req, res) => {
   const boardId = req.params.boardId;
   const backend = req.query.backend;
+  console.log(boardId, backend);
   let allowedUsers;
   if (req.query.allowed !== undefined) {
     console.log(req.query.allowed);
@@ -141,14 +146,57 @@ async function wsConnectionHandler(ws, req) {
 }
 
 /**
+ * Wysyła info działania serwera do TM'a.
+ */
+async function sendInfo() {
+  try {
+    const response = await axios(`/info`, {
+      method: 'post',
+      data: {
+        control: CONTROL_ADDR,
+        users: CLIENTS_ADDR,
+        tables: JSON.stringify([...tables.entries()].map(([id]) => id)),
+      },
+      baseURL: MASTER_ADDR,
+      timeout: 5000,
+    });
+    if (response.status !== 200) {
+      throw new Error(`info request failed with code ${response.status}`);
+    }
+    const success = response?.data?.success;
+    if (success !== true) {
+      throw new Error(`info request failed with ${response?.data?.reason}`);
+    }
+    const toBeClosed = response?.data?.toBeClosed;
+    await Promise.all(toBeClosed?.map(async (id) => {
+      await closeBoard(id);
+    }) ?? []);
+    return true;
+  } catch (err) {
+    console.log(err.message);
+    return false;
+  }
+}
+
+/**
  * Główna funkcja programu
  */
 async function run() {
   // clients api
   const wss = new ws.WebSocketServer({port: CLIENTS_PORT});
   wss.on('connection', wsConnectionHandler);
-
-  const serwer = app.listen(CONTROL_PORT, () => {});
+  console.log('setting up control endpoint');
+  const serwer = await new Promise((resolve) => {
+    const temp = app.listen(CONTROL_PORT, () => {
+      resolve(temp);
+    });
+  });
+  console.log('setting up heart bit service');
+  // sending initial heartbeat
+  if (!(await sendInfo())) {
+    console.log('initial heartbeat failed');
+  }
+  const heartBeatService = setInterval(sendInfo, HEART_BEAT_INTERVAL);
   console.log('ready');
   /**
    * Obsługuje sygnał wyłączenia aplikacji.
@@ -156,10 +204,11 @@ async function run() {
    */
   async function handleQuit(signal) {
     try {
+      clearInterval(heartBeatService);
       tables.forEach((table) => table.close());
       await Promise.all([
-        promisify(wss.close)(),
-        promisify(serwer.close)(),
+        new Promise((resolve) => wss.close(() => resolve())),
+        new Promise((resolve) => serwer.close(() => resolve())),
       ]);
     } catch (err) {
       console.log(err.message);

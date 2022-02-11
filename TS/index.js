@@ -2,7 +2,6 @@
 const ws = require('ws');
 const express = require('express');
 const process = require('process');
-const promisify = require('util').promisify;
 const TableDb = require('./TableDb.js');
 
 const WS_PORT = parseInt(process.argv[2]);
@@ -135,7 +134,11 @@ async function run() {
   const wss = new ws.WebSocketServer({port: WS_PORT});
   wss.on('connection', wsConnectionHandler);
 
-  const serwer = app.listen(HTTP_PORT, () => {});
+  const serwer = await new Promise((resolve) => {
+    const temp = app.listen(HTTP_PORT, () => {
+      resolve(temp);
+    });
+  });
   /**
    * Obsługuje sygnał wyłączenia aplikacji.
    * @param {*} signal otrzymany sygnał
@@ -143,8 +146,8 @@ async function run() {
   async function handleQuit(signal) {
     try {
       await Promise.all([
-        promisify(wss.close)(),
-        promisify(serwer.close)(),
+        new Promise((resolve) => wss.close(() => resolve())),
+        new Promise((resolve) => serwer.close(() => resolve())),
         tableDb.close(),
       ]);
     } catch (err) {
