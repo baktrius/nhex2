@@ -1,15 +1,19 @@
 const axios = require('axios');
 
+const TSS_EXPIRE_TIMEOUT = 1000 * 60;
 module.exports = class TSS {
   /**
    * Reprezentuje serwer synchronizujący stoły.
    * @param {String} controlAddress adres portu do zarządzania serwerem
    * @param {String} usersAddress adres portu do łączenia się użytkowników
+   * @param {Function} closeCallback funkcja do wywołania przy zamknięciu stołu
    */
-  constructor(controlAddress, usersAddress) {
+  constructor(controlAddress, usersAddress, closeCallback) {
     this.controlAddress = controlAddress;
     this.usersAddress = usersAddress;
     this.tables = new Set();
+    this.closeCallback = closeCallback;
+    this.closeService = setTimeout(this.close.bind(this), TSS_EXPIRE_TIMEOUT);
   }
   /**
    * Sprawdza czy stół jest otwarty na serwerze synchronizującym.
@@ -88,5 +92,27 @@ module.exports = class TSS {
     if (this.tables.has(tableId)) {
       return `${this.usersAddress}/board/${tableId}`;
     }
+  }
+  /**
+   * Przedłuża czas ważności serwera.
+   */
+  touch() {
+    console.log(`touched TSS ${this.controlAddress}`);
+    clearTimeout(this.closeService);
+    this.closeService = setTimeout(this.close.bind(this), TSS_EXPIRE_TIMEOUT);
+  }
+  /**
+   * Dodaje informacje o obsłudze stołu przez serwer.
+   * @param {*} tableId id stołu
+   */
+  addTable(tableId) {
+    this.tables.add(tableId);
+  }
+  /**
+   * Zamyka stół.
+   */
+  close() {
+    console.log(`removed TSS ${this.controlAddress}`);
+    this.closeCallback?.();
   }
 };
