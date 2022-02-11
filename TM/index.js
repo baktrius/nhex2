@@ -14,7 +14,7 @@ const APP_PORT = process.argv[3];
 const TSSs = new Map();
 // lista TSów skonfigurowanych w systemie
 const TSs = [
-  new TS('http://127.0.0.1:8000', 'ws://ts:8080'),
+  new TS('http://127.0.0.1:8000', 'ws://127.0.0.1:8080'),
 ];
 
 const tableDb = new TableDb('mariadb://TM:@127.0.0.1:3306/tables');
@@ -64,6 +64,7 @@ function handleTSSInfo(TSSs, control, users, tables) {
     TSSs.set(control, tss);
   } else {
     tss.touch();
+    tss.clearTables();
   }
   const toBeClosed = tables.filter((tableId) => {
     const tableTSS = getBoardTSS(TSSs, tableId);
@@ -80,7 +81,7 @@ function handleTSSInfo(TSSs, control, users, tables) {
 /**
  * Wybiera najlepszy TSS dla zadanej synchronizacji stołu.
  * Jeśli stół jest otwarty przez jakiś TSS to właśnie ten jest zwracany.
- * @param {Array} TSSs lista dostępnych TSSów
+ * @param {Map} TSSs lista dostępnych TSSów
  * @param {String} boardId id stołu do synchronizacji
  * @param {*} req powiązane żądanie
  * @return {*} wybrany TSS
@@ -90,7 +91,8 @@ function selectOptimalTSS(TSSs, boardId, req) {
     throw Error('no TSS connected');
   }
   return getBoardTSS(TSSs, boardId) ??
-      TSSs[Math.floor(Math.random() * TSs.length)];
+      [...TSSs.entries()]
+          .map(([, tss]) => tss)[Math.floor(Math.random() * TSSs.size)];
 }
 const app = express();
 
@@ -114,7 +116,7 @@ app.post('/board/create', async (req, res) => {
   }
 });
 
-app.get('/board/:boardId/join', async (req, res) => {
+app.post('/board/:boardId/join', async (req, res) => {
   const boardId = req.params.boardId;
   const boardInfo = await tableDb.getTableInfo(boardId);
   const boardStorage = boardInfo.storage;

@@ -38,7 +38,6 @@ module.exports = class TSS {
       baseURL: this.controlAddress,
       timeout: 5000,
     });
-    console.log(response);
     if (response.status !== 200) {
       throw new Error(
           `table load request failed with status ${response.status}`);
@@ -107,6 +106,12 @@ module.exports = class TSS {
    */
   addTable(tableId) {
     this.tables.add(tableId);
+  }
+  /**
+   * Usuwa wszystkie obsługiwane stoły.
+   */
+  clearTables() {
+    this.tables.clear();
   }
   /**
    * Zamyka stół.

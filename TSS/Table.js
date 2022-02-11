@@ -3,10 +3,12 @@ const Ws = require('ws');
 module.exports = class Table {
   /**
    * Reprezentuje synchronizowany stół.
-   * @param {string} backup adres pod którym zapisywany jest stół
+   * @param {String} backup adres pod którym zapisywany jest stół
+   * @param {Function} closeCallback funkcja do wywołania przy zamknięciu stołu
    */
-  constructor(backup) {
+  constructor(backup, closeCallback) {
     this.backup = backup;
+    this.closeCallback = closeCallback;
     this.clients = [];
   }
   /**
@@ -29,6 +31,7 @@ module.exports = class Table {
               return;
             }
             this.backup_ws.on('message', this.handleBackupMessage.bind(this));
+            this.backup_ws.on('close', this.close.bind(this));
             this.boardId = boardId;
             this.commands = commands;
             this.future = [];
@@ -135,10 +138,11 @@ module.exports = class Table {
   /**
    * Zamyka stół
    */
-  async close() {
+  close() {
     this.backup_ws.close();
     this.clients.forEach((client) => {
       client.close();
     });
+    this.closeCallback?.();
   }
 };
