@@ -38,10 +38,7 @@ document.getElementById('loginForm').addEventListener('submit', async (event) =>
     for (const [name, val] of formData.entries()) {
       data[name] = val;
     }
-    data['email'] = 'fake@gmail.com';
-    data['name'] = 'krzys';
-    data['lastname'] = 'krzys';
-    const response = await postData(`http://localhost:8001/auth/register`, data);
+    const response = await postData(`/auth/register`, data);
     console.log(response);
     if (response.status === 200) {
       goToIndex();

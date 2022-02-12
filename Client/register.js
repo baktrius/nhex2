@@ -22,7 +22,7 @@ async function postData(url = '', data = {}) {
 }
 
 function goToIndex() {
-  window.location = window.location.origin + 'index.htm';
+  window.location = window.location.origin + '/index.htm';
 }
 
 function retry() {
@@ -37,14 +37,20 @@ document.getElementById('registerForm').addEventListener('submit', async (event)
     for (const [name, val] of formData.entries()) {
       data[name] = val;
     }
-    const response = await postData(`http://localhost:8001/auth/register`, data);
+    const response = await postData(`/auth/register`, data);
     console.log(response);
     if (response.status === 200) {
       goToIndex();
-    } else if (response.status === 422) {
-      retry();
     } else {
-      throw new Error(`Register failed with unknown reason`);
+      try {
+        const data = await response.json();
+        console.log(data);
+        const message = data?.detail ?? 'Unknown reason';
+        alert(message);
+      } catch (err) {
+        throw new Error(`Register failed with unknown reason`);
+      }
+      retry();
     }
   } catch (err) {
     console.error(err);
