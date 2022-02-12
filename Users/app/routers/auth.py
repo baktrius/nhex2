@@ -92,22 +92,6 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
     return user
 
 
-async def get_current_active_user(
-        current_user: User = Depends(get_current_user)):
-    if not current_user.isActive:
-        raise HTTPException(status_code=400, detail="Inactive user")
-    return current_user
-
-
-async def get_current_superuser(
-        current_user: User = Depends(get_current_active_user)):
-    if not current_user.isSuperuser:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="You are not superuser"
-        )
-    return current_user
-
 async def user_info(token: str) -> Union[UserInfo, UserNotLogged]:
     user = get_user_from_token(token)
     if not user:
@@ -119,5 +103,5 @@ async def user_info(token: str) -> Union[UserInfo, UserNotLogged]:
         attrs = {key: user.__getattribute__(key) for key in (
             "username", "email", "name", "lastname"
         )}
-        return UserInfo(success=True, user=user)#UserFields(**attrs))
+        return UserInfo(success=True, user=user)
 

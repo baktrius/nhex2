@@ -2,49 +2,27 @@ from fastapi import HTTPException, status
 import pymongo
 
 from pydantic import BaseModel
-from typing import Optional
 import os
-import uuid
+from uuid import UUID, uuid4
 
 from ..utils import get_password_hash
 
 class UserFields(BaseModel):
-    email: str
     username: str
-    name: str
-    lastname: str
 
 class User(UserFields):
-    uuid: uuid.UUID
-    isActive: bool = True
-    isSuperuser: bool = False
+    uuid: UUID
 
-
-class UserCreate(UserFields):
+class UserCreate(BaseModel):
+    username: str
     password: str
-
-
-class UserUpdate(BaseModel):
-    username: Optional[str]
-    name: Optional[str]
-    lastname: Optional[str]
-
 
 class UserDB(User):
     hashedPassword: str
 
-
-class UserShort(BaseModel):
-    username: str
-    name: str
-    lastname: str
-    uuid: uuid.UUID
-
-
-def prepare_colletion(colletion):
-    colletion.create_index("username", unique=True)
-    colletion.create_index("email", unique=True)
-    colletion.create_index("uuid", unique=True)
+def prepare_collection(collection):
+    collection.create_index("username", unique=True)
+    collection.create_index("uuid", unique=True)
 
 
 DATABASE_URL = os.getenv("DATABASE_URL")
@@ -53,7 +31,7 @@ client = pymongo.MongoClient(DATABASE_URL, uuidRepresentation='standard')
 db = client["platform"]
 
 users_collection = db["users"]
-prepare_colletion(users_collection)
+prepare_collection(users_collection)
 
 db_testing = False
 fake_users_collection = None
@@ -70,7 +48,7 @@ def set_fake_collection():
     global db_testing, fake_users_collection
     db_testing = True
     fake_users_collection = db["fake_users"]
-    prepare_colletion(fake_users_collection)
+    prepare_collection(fake_users_collection)
 
 
 def reset_fake_collection():
@@ -94,16 +72,10 @@ def add_user(user: UserCreate):
             detail="Username is already taken"
         )
 
-    if collection.find_one({"email": user.email}):
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Email is already taken"
-        )
-
-    new_uuid = uuid.uuid4()
+    new_uuid = uuid4()
 
     while collection.find_one({"uuid": new_uuid}):
-        new_uuid = uuid.uuid4()
+        new_uuid = uuid4()
 
     userDB = UserDB(
         **dict(user),
@@ -116,7 +88,7 @@ def add_user(user: UserCreate):
     return get_user(userDB.uuid)
 
 
-def get_user(uuid: uuid.UUID = None, username: str = None):
+def get_user(uuid: UUID = None, username: str = None):
     collection = get_collection()
     search_parameters = {
         **({} if uuid is None else {"uuid": uuid}),

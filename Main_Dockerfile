@@ -1,0 +1,12 @@
+FROM python:3.10
+
+WORKDIR /nhex/Main
+
+COPY Main/requirements.txt .
+
+RUN pip install --no-cache-dir --upgrade -r requirements.txt
+
+COPY Main/app ./app
+
+ENTRYPOINT ["uvicorn", "app:app"]
+CMD ["--host", "0.0.0.0", "--port", "8080"]

@@ -86,9 +86,19 @@ services:
         depends_on:
             - Users_mongo
             - Users_redis
-        ports:
-            - "8001:${USERS_PORT}" # this is just for testing
         expose:
             - "${USERS_PORT}"
-#         ports:
-#             - "${USERS_PORT}:${USERS_PORT}"
+        ports:
+            - "2173:${USERS_PORT}"
+
+    Main:
+        image: nhex2/main
+        depends_on:
+            - Users
+        environment:
+            USERS_URL: "http://Users:${USERS_PORT}"
+            TM_URL: "http://TM:${TM_APP_PORT}"
+        ports:
+            - "2137:${MAIN_PORT}" # this is just for testing
+        expose:
+            - "${MAIN_PORT}"
