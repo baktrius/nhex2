@@ -12,7 +12,12 @@ const app = express();
 
 app.use(cookieParser());
 
-async function isLogged(token){
+/**
+ * Sprawdza czy użtykownik o zadanym tokenie jest zalogowany.
+ * @param {*} token token użytkownika
+ * @return {Boolean} Użytkownik jest zalogowany
+ */
+async function isLogged(token) {
   return token !== undefined;
 }
 
@@ -64,6 +69,37 @@ app.use('/boards', proxy(TM_ADDR, {
 }));
 app.use('/', express.static('../Client'));
 
-app.listen(APP_PORT, () => {
-  console.log('running');
-});
+/**
+ * Główna funkcja programu
+ */
+async function run() {
+  console.log('setting up clients endpoint');
+  const serwer = await new Promise((resolve) => {
+    const temp = app.listen(APP_PORT, () => {
+      resolve(temp);
+    });
+  });
+  console.log('done');
+  /**
+   * Obsługuje sygnał wyłączenia aplikacji.
+   * @param {*} signal otrzymany sygnał
+   */
+  async function handleQuit(signal) {
+    try {
+      console.log('gracefully closing endpoints and db connection');
+      await Promise.all([
+        new Promise((resolve) => serwer.close(() => resolve())),
+      ]);
+      console.log('done');
+    } catch (err) {
+      console.log(err);
+      console.log(err.message);
+      process.exit(1);
+    }
+    process.exit(0);
+  }
+
+  process.on('SIGTERM', handleQuit);
+}
+
+run().catch(console.dir);
