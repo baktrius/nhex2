@@ -30,6 +30,6 @@ h4 {
   margin: 2px 0px 4px 0px;
 }
 
-.invalid input[type="text"], .invalid input[type="password"] {
+.invalid input[type="text"], .invalid input[type="password"], .invalid input[type="email"] {
   box-shadow: 0 0 3pt 2pt #ff0000;
 }

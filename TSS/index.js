@@ -10,7 +10,7 @@ const HEART_BEAT_INTERVAL = 15000;
 
 const TSS_INTERNAL_CONTROL_PORT = parseInt(process.env.TSS_INTERNAL_CONTROL_PORT);
 const TSS_INTERNAL_CLIENTS_PORT = parseInt(process.env.TSS_INTERNAL_CLIENTS_PORT);
-const TSS_EXTERNAL_CONTROL_ADDR = process.env.TSS_EXTERNAL_CONTROL_ADDR;
+const TSS_INTERNAL_CONTROL_ADDR = process.env.TSS_INTERNAL_CONTROL_ADDR;
 const TSS_EXTERNAL_CLIENTS_ADDR = process.env.TSS_EXTERNAL_CLIENTS_ADDR;
 
 const MASTER_ADDR = `http://TM:${process.env.TM_TSS_PORT}`;
@@ -155,7 +155,7 @@ async function sendInfo() {
     const response = await axios(`/info`, {
       method: 'post',
       data: {
-        control: TSS_EXTERNAL_CONTROL_ADDR,
+        control: TSS_INTERNAL_CONTROL_ADDR,
         users: TSS_EXTERNAL_CLIENTS_ADDR,
         tables: JSON.stringify([...tables.entries()].map(([id]) => id)),
       },

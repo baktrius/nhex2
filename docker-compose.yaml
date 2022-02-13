@@ -25,11 +25,11 @@ services:
             TM:
                 condition: service_started
         expose:
-            - "${TSS1_EXTERNAL_CONTROL_ADDR}"
+            - "${TSS1_INTERNAL_CONTROL_ADDR}"
         environment:
             TSS_INTERNAL_CONTROL_PORT: ${TSS_INTERNAL_CONTROL_PORT}
             TSS_INTERNAL_CLIENTS_PORT: ${TSS_INTERNAL_CLIENTS_PORT}
-            TSS_EXTERNAL_CONTROL_ADDR: ${TSS1_EXTERNAL_CONTROL_ADDR}
+            TSS_INTERNAL_CONTROL_ADDR: ${TSS1_INTERNAL_CONTROL_ADDR}
             TSS_EXTERNAL_CLIENTS_ADDR: ${TSS1_EXTERNAL_CLIENTS_ADDR}
             TM_TSS_PORT: ${TM_TSS_PORT}
             USERS_PORT: ${USERS_PORT}
