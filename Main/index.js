@@ -8,6 +8,9 @@ const APP_PORT = process.argv[2];
 const USERS_ADDR = process.argv[3];
 const TM_ADDR = process.argv[4];
 
+// here you can define period in second, this one is 5 minutes
+const CACHE_PERIOD = 5 * 60;
+
 const app = express();
 
 app.use(cookieParser());
@@ -68,6 +71,27 @@ app.use('/boards', proxy(TM_ADDR, {
     return '/boards' + req.path;
   },
 }));
+
+/**
+ * Dodaje obsługę nagłówków cache do żądania http.
+ * @param {*} req request http
+ * @param {*} res response http
+ * @param {*} next next express
+ */
+function setCache(req, res, next) {
+  // you only want to cache for GET requests
+  if (req.method == 'GET') {
+    res.set('Cache-control', `public, max-age=${CACHE_PERIOD}`);
+  } else {
+    // for the other requests set strict no caching parameters
+    res.set('Cache-control', `no-store`);
+  }
+
+  // remember to call next() to pass on the request
+  next();
+}
+
+app.use(setCache);
 app.use('/', express.static('../Client'));
 
 /**

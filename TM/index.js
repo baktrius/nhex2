@@ -95,7 +95,20 @@ function selectOptimalTSS(TSSs, boardId, req) {
       [...TSSs.entries()]
           .map(([, tss]) => tss)[Math.floor(Math.random() * TSSs.size)];
 }
+
+/**
+ * Wyłącza cachowanie odpowiedzi.
+ * @param {*} req otrzymane żądanie
+ * @param {*} res przygotowywana odpowiedź
+ * @param {*} next next
+ */
+function noCache(req, res, next) {
+  res.set('Cache-control', `no-store`);
+  next();
+}
+
 const app = express();
+app.use(noCache);
 
 app.post('/board/create', async (req, res) => {
   try {
@@ -126,20 +139,24 @@ app.post('/board/:boardId/join', async (req, res) => {
     const currentTSS = getBoardTSS(TSSs, boardId);
     if (currentTSS !== undefined) {
       for (let i = 0; i < 3; ++i) {
-        if (await currentTSS.prepareTable(boardId, boardStorage)) {
-          res.json({success: true, link: currentTSS.getTableLink(boardId)});
-          return;
-        }
+        try {
+          if (await currentTSS.prepareTable(boardId, boardStorage)) {
+            res.json({success: true, link: currentTSS.getTableLink(boardId)});
+            return;
+          }
+        } catch (err) {}
         await new Promise((resolve) => setTimeout(resolve, 1000));
       }
       currentTSS.close();
     }
     for (let i = 0; i < 5; ++i) {
       const TSS = selectOptimalTSS(TSSs, boardId, req);
-      if (await TSS.prepareTable(boardId, boardStorage)) {
-        res.json({success: true, link: TSS.getTableLink(boardId)});
-        return;
-      }
+      try {
+        if (await TSS.prepareTable(boardId, boardStorage)) {
+          res.json({success: true, link: TSS.getTableLink(boardId)});
+          return;
+        }
+      } catch (err) {}
       await new Promise((resolve) => setTimeout(resolve, 1000));
     }
     res.json({success: false, reason: 'unable to load board'});
@@ -159,6 +176,7 @@ app.get('/boards', (req, res) => {
 app.use(express.static('../Client'));
 
 const app2 = express();
+app2.use(noCache);
 app2.use(express.json());
 app2.use(express.urlencoded({extended: true}));
 

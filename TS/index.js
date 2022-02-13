@@ -38,8 +38,20 @@ async function getBoard(id) {
 // obiekt umożliwiający operacje na bazie danych
 const tableDb = new TableDb(DB_CONNECTION_STRING, DB_NAME);
 
+/**
+ * Wyłącza cachowanie odpowiedzi.
+ * @param {*} req otrzymane żądanie
+ * @param {*} res przygotowywana odpowiedź
+ * @param {*} next next
+ */
+function noCache(req, res, next) {
+  res.set('Cache-control', `no-store`);
+  next();
+}
+
 // http api
 const app = express();
+app.use(noCache);
 
 // endpoint umożliwiający pobranie planszy
 app.get('/board/:boardId', async (req, res) => {
