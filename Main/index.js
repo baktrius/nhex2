@@ -4,9 +4,10 @@ const process = require('process');
 const cookieParser = require('cookie-parser');
 const axios = require('axios');
 
-const APP_PORT = process.argv[2];
-const USERS_ADDR = process.argv[3];
-const TM_ADDR = process.argv[4];
+const APP_PORT = parseInt(process.env.MAIN_APP_PORT);
+const USERS_ADDR = process.env.MAIN_USERS_ADDR;
+const TM_ADDR = process.env.MAIN_TM_ADDR;
+console.log(APP_PORT, USERS_ADDR, TM_ADDR);
 
 // here you can define period in second, this one is 5 minutes
 const CACHE_PERIOD = 5 * 60;

@@ -68,6 +68,21 @@ services:
         ports:
             - "6666:${TM_APP_PORT}"
 
+    MAIN:
+        image: nhex2/main
+        depends_on:
+            TM:
+                condition: service_started
+        expose:
+            - "${MAIN_APP_PORT}"
+        environment:
+            MAIN_APP_PORT: "${MAIN_APP_PORT}"
+            MAIN_TM_ADDR: "http://TM:${TM_APP_PORT}"
+            MAIN_USERS_ADDR: "http://Users:${USERS_PORT}"
+        ports:
+            - "3000:${MAIN_APP_PORT}"
+
+
     Users_mongo:
         image: mongo
         command:
