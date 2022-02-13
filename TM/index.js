@@ -122,12 +122,25 @@ app.post('/board/:boardId/join', async (req, res) => {
   const boardInfo = await tableDb.getTableInfo(boardId);
   const boardStorage = boardInfo.storage;
   try {
+    // Check if game is actually active
+    const currentTSS = getBoardTSS(TSSs, boardId);
+    if (currentTSS !== undefined) {
+      for (let i = 0; i < 3; ++i) {
+        if (await currentTSS.prepareTable(boardId, boardStorage)) {
+          res.json({success: true, link: currentTSS.getTableLink(boardId)});
+          return;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
+      currentTSS.close();
+    }
     for (let i = 0; i < 5; ++i) {
       const TSS = selectOptimalTSS(TSSs, boardId, req);
       if (await TSS.prepareTable(boardId, boardStorage)) {
         res.json({success: true, link: TSS.getTableLink(boardId)});
         return;
       }
+      await new Promise((resolve) => setTimeout(resolve, 1000));
     }
     res.json({success: false, reason: 'unable to load board'});
   } catch (err) {
@@ -175,6 +188,8 @@ async function run() {
       resolve(temp);
     });
   });
+  console.log('waiting 20s for TSSs servers to connect...');
+  await new Promise((resolve) => setTimeout(resolve, 20000));
   console.log('done');
   console.log('setting up users endpoint');
   const serwer = await new Promise((resolve) => {

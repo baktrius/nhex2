@@ -264,6 +264,11 @@ let redrawService = false;
 async function run() {
     setStatus('obtaining address...');
     const response = await postData(`board/${tableId}/join`);
+    if (response.success !== true) {
+        console.log(response.reason);
+        alert('unable to connect to board :( try to reload page after some time');
+        return;
+    }
     console.log(response);
     const wsBackend = response.link;
     console.log('connecting...');
