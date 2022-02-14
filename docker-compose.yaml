@@ -105,8 +105,6 @@ services:
             TM_TSS_PORT: "${TM_TSS_PORT}"
             TM_APP_PORT: "${TM_APP_PORT}"
             TM_TS_CONFIGURATION: "${TM_TS_CONFIGURATION}"
-        ports:
-            - "6666:${TM_APP_PORT}"
 
     MAIN:
         image: nhex2/main
@@ -119,8 +117,6 @@ services:
             MAIN_APP_PORT: "${MAIN_APP_PORT}"
             MAIN_TM_ADDR: "http://TM:${TM_APP_PORT}"
             MAIN_USERS_ADDR: "http://Users:${USERS_PORT}"
-        ports:
-            - "3000:${MAIN_APP_PORT}"
 
     PROXY:
         image: nhex2/proxy
@@ -150,8 +146,6 @@ services:
         depends_on:
             - Users_mongo
             - Users_redis
-        ports:
-            - "8001:${USERS_PORT}" # this is just for testing
         expose:
             - "${USERS_PORT}"
 #         ports:
