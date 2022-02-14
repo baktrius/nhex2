@@ -10,13 +10,22 @@ const TSS_PORT = process.env.TM_TSS_PORT;
 // port na którym Main przysyła żądania od klientów
 const APP_PORT = process.env.TM_APP_PORT;
 const DB_HOST = process.env.TM_DB_HOST ?? 'TM_maria';
+const TS_CONFIGURATION = process.env.TM_TS_CONFIGURATION;
 
 // lista aktywnych TSSów
 const TSSs = new Map();
 // lista TSów skonfigurowanych w systemie
-const TSs = [
-  new TS('http://ts:8081', 'ws://ts:8080'),
-];
+let TSs;
+try {
+  TSs = TS_CONFIGURATION.split('|').map((entry) => {
+    const [http, ws] = entry.split(';');
+    return new TS(http, ws);
+  });
+} catch (err) {
+  console.error(err);
+  console.error('Unable to parse TSs configuration');
+  process.exit(1);
+}
 
 const tableDb = new TableDb(`mariadb://TM@${DB_HOST}:3306/tables`);
 

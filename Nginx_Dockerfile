@@ -1,0 +1,4 @@
+FROM nginx:latest
+
+COPY Nginx/proxy.conf /etc/nginx/conf.d/
+WORKDIR /temp/nginx

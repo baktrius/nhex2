@@ -117,6 +117,7 @@ module.exports = class TSS {
    * Zamyka stół.
    */
   close() {
+    clearTimeout(this.closeService);
     console.log(`removed TSS ${this.controlAddress}`);
     this.closeCallback?.();
   }

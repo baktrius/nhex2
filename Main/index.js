@@ -37,9 +37,6 @@ const anonymousEndpoints = new Set([
 
 
 app.use('/', async (req, res, next) => {
-  console.log(`'${req.path}'`);
-  console.log(req.cookies);
-  console.log(req.body);
   const userToken = req.cookies?.token;
   const logged = await isLogged(userToken);
   if (anonymousEndpoints.has(req.path)) {
