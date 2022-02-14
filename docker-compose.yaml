@@ -18,6 +18,26 @@ services:
         environment:
             TS_WS_PORT: "${TS_WS_PORT}"
             TS_HTTP_PORT: "${TS_HTTP_PORT}"
+            TS_MONGO_HOST: TS_mongo
+
+    TS2_mongo:
+        image: mongo
+        command:
+            - mongod
+        expose:
+            - ${MONGO_PORT}
+
+    TS2:
+        image: nhex2/ts
+        depends_on:
+            - TS2_mongo
+        expose:
+            - "${TS_WS_PORT}"
+            - "${TS_HTTP_PORT}"
+        environment:
+            TS_WS_PORT: "${TS_WS_PORT}"
+            TS_HTTP_PORT: "${TS_HTTP_PORT}"
+            TS_MONGO_HOST: TS2_mongo
 
     TSS1:
         image: nhex2/tss
@@ -25,7 +45,8 @@ services:
             TM:
                 condition: service_started
         expose:
-            - "${TSS1_INTERNAL_CONTROL_ADDR}"
+            - "${TSS_INTERNAL_CONTROL_PORT}"
+            - "${TSS_INTERNAL_CLIENTS_PORT}"
         environment:
             TSS_INTERNAL_CONTROL_PORT: ${TSS_INTERNAL_CONTROL_PORT}
             TSS_INTERNAL_CLIENTS_PORT: ${TSS_INTERNAL_CLIENTS_PORT}
@@ -34,7 +55,25 @@ services:
             TM_TSS_PORT: ${TM_TSS_PORT}
             USERS_PORT: ${USERS_PORT}
         ports:
-              - "${TSS_INTERNAL_CLIENTS_PORT}:${TSS_INTERNAL_CLIENTS_PORT}"
+              - "${TSS1_EXT_PORT}:${TSS_INTERNAL_CLIENTS_PORT}"
+
+    TSS2:
+        image: nhex2/tss
+        depends_on:
+            TM:
+                condition: service_started
+        expose:
+            - "${TSS_INTERNAL_CONTROL_PORT}"
+            - "${TSS_INTERNAL_CLIENTS_PORT}"
+        environment:
+            TSS_INTERNAL_CONTROL_PORT: ${TSS_INTERNAL_CONTROL_PORT}
+            TSS_INTERNAL_CLIENTS_PORT: ${TSS_INTERNAL_CLIENTS_PORT}
+            TSS_INTERNAL_CONTROL_ADDR: ${TSS2_INTERNAL_CONTROL_ADDR}
+            TSS_EXTERNAL_CLIENTS_ADDR: ${TSS2_EXTERNAL_CLIENTS_ADDR}
+            TM_TSS_PORT: ${TM_TSS_PORT}
+            USERS_PORT: ${USERS_PORT}
+        ports:
+              - "${TSS2_EXT_PORT}:${TSS_INTERNAL_CLIENTS_PORT}"
 
     TM_maria:
         image: mariadb
@@ -65,8 +104,30 @@ services:
             TS_WS_PORT: "${TS_WS_PORT}"
             TM_TSS_PORT: "${TM_TSS_PORT}"
             TM_APP_PORT: "${TM_APP_PORT}"
+            TM_TS_CONFIGURATION: "${TM_TS_CONFIGURATION}"
+
+    MAIN:
+        image: nhex2/main
+        depends_on:
+            TM:
+                condition: service_started
+        expose:
+            - "${MAIN_APP_PORT}"
+        environment:
+            MAIN_APP_PORT: "${MAIN_APP_PORT}"
+            MAIN_TM_ADDR: "http://TM:${TM_APP_PORT}"
+            MAIN_USERS_ADDR: "http://Users:${USERS_PORT}"
+
+    PROXY:
+        image: nhex2/proxy
+        depends_on:
+            MAIN:
+                condition: service_started
+        expose:
+            - 3001
         ports:
-            - "6666:${TM_APP_PORT}"
+            - 3001:3001
+
 
     Users_mongo:
         image: mongo
@@ -85,8 +146,6 @@ services:
         depends_on:
             - Users_mongo
             - Users_redis
-        ports:
-            - "8001:${USERS_PORT}" # this is just for testing
         expose:
             - "${USERS_PORT}"
 #         ports:

@@ -1,0 +1,17 @@
+FROM node:latest
+
+ENV HTTP_PORT 8081
+
+WORKDIR /nhex/Main
+
+COPY Main/package.json .
+COPY Main/index.js .
+
+RUN npm install --production
+
+WORKDIR /nhex/Client
+
+COPY Client/* /nhex/Client/
+
+ENTRYPOINT ["node", "/nhex/Main/index.js"]
+#CMD ["${WS_PORT}", "${HTTP_PORT}"]

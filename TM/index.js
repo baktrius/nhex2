@@ -10,13 +10,22 @@ const TSS_PORT = process.env.TM_TSS_PORT;
 // port na którym Main przysyła żądania od klientów
 const APP_PORT = process.env.TM_APP_PORT;
 const DB_HOST = process.env.TM_DB_HOST ?? 'TM_maria';
+const TS_CONFIGURATION = process.env.TM_TS_CONFIGURATION;
 
 // lista aktywnych TSSów
 const TSSs = new Map();
 // lista TSów skonfigurowanych w systemie
-const TSs = [
-  new TS('http://ts:8081', 'ws://ts:8080'),
-];
+let TSs;
+try {
+  TSs = TS_CONFIGURATION.split('|').map((entry) => {
+    const [http, ws] = entry.split(';');
+    return new TS(http, ws);
+  });
+} catch (err) {
+  console.error(err);
+  console.error('Unable to parse TSs configuration');
+  process.exit(1);
+}
 
 const tableDb = new TableDb(`mariadb://TM@${DB_HOST}:3306/tables`);
 
@@ -95,7 +104,20 @@ function selectOptimalTSS(TSSs, boardId, req) {
       [...TSSs.entries()]
           .map(([, tss]) => tss)[Math.floor(Math.random() * TSSs.size)];
 }
+
+/**
+ * Wyłącza cachowanie odpowiedzi.
+ * @param {*} req otrzymane żądanie
+ * @param {*} res przygotowywana odpowiedź
+ * @param {*} next next
+ */
+function noCache(req, res, next) {
+  res.set('Cache-control', `no-store`);
+  next();
+}
+
 const app = express();
+app.use(noCache);
 
 app.post('/board/create', async (req, res) => {
   try {
@@ -126,20 +148,24 @@ app.post('/board/:boardId/join', async (req, res) => {
     const currentTSS = getBoardTSS(TSSs, boardId);
     if (currentTSS !== undefined) {
       for (let i = 0; i < 3; ++i) {
-        if (await currentTSS.prepareTable(boardId, boardStorage)) {
-          res.json({success: true, link: currentTSS.getTableLink(boardId)});
-          return;
-        }
+        try {
+          if (await currentTSS.prepareTable(boardId, boardStorage)) {
+            res.json({success: true, link: currentTSS.getTableLink(boardId)});
+            return;
+          }
+        } catch (err) {}
         await new Promise((resolve) => setTimeout(resolve, 1000));
       }
       currentTSS.close();
     }
     for (let i = 0; i < 5; ++i) {
       const TSS = selectOptimalTSS(TSSs, boardId, req);
-      if (await TSS.prepareTable(boardId, boardStorage)) {
-        res.json({success: true, link: TSS.getTableLink(boardId)});
-        return;
-      }
+      try {
+        if (await TSS.prepareTable(boardId, boardStorage)) {
+          res.json({success: true, link: TSS.getTableLink(boardId)});
+          return;
+        }
+      } catch (err) {}
       await new Promise((resolve) => setTimeout(resolve, 1000));
     }
     res.json({success: false, reason: 'unable to load board'});
@@ -159,6 +185,7 @@ app.get('/boards', (req, res) => {
 app.use(express.static('../Client'));
 
 const app2 = express();
+app2.use(noCache);
 app2.use(express.json());
 app2.use(express.urlencoded({extended: true}));
 

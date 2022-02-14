@@ -6,7 +6,7 @@ const TableDb = require('./TableDb.js');
 
 const WS_PORT = parseInt(process.env.TS_WS_PORT);
 const HTTP_PORT = parseInt(process.env.TS_HTTP_PORT);
-const DB_HOST = 'TS_mongo';
+const DB_HOST = process.env.TS_MONGO_HOST;
 const DB_PORT = '27017';
 const DB_OPTIONS = 'maxPoolSize=20&w=majority';
 const DB_CONNECTION_STRING = `mongodb://${DB_HOST}:${DB_PORT}/?${DB_OPTIONS}`;
@@ -38,8 +38,20 @@ async function getBoard(id) {
 // obiekt umożliwiający operacje na bazie danych
 const tableDb = new TableDb(DB_CONNECTION_STRING, DB_NAME);
 
+/**
+ * Wyłącza cachowanie odpowiedzi.
+ * @param {*} req otrzymane żądanie
+ * @param {*} res przygotowywana odpowiedź
+ * @param {*} next next
+ */
+function noCache(req, res, next) {
+  res.set('Cache-control', `no-store`);
+  next();
+}
+
 // http api
 const app = express();
+app.use(noCache);
 
 // endpoint umożliwiający pobranie planszy
 app.get('/board/:boardId', async (req, res) => {

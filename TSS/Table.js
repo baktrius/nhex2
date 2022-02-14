@@ -1,5 +1,7 @@
 const Ws = require('ws');
 
+const CLOSE_TIMEOUT = 60 * 1000;
+
 module.exports = class Table {
   /**
    * Reprezentuje synchronizowany stół.
@@ -35,6 +37,7 @@ module.exports = class Table {
             this.boardId = boardId;
             this.commands = commands;
             this.future = [];
+            this.startCloseService();
             resolve();
           } catch (err) {
             reject(err);
@@ -57,6 +60,26 @@ module.exports = class Table {
     
   }
   /**
+   * Uruchamia serwis usuwający stół po czasie.
+   */
+  startCloseService() {
+    if (this.closeService !== undefined) {
+      this.stopCloseService();
+    }
+    console.log('started table close service');
+    this.closeService = setTimeout(this.close.bind(this), CLOSE_TIMEOUT);
+  }
+  /**
+   * Wyłącza serwis usuwający stół po czasie.
+   */
+  stopCloseService() {
+    if (this.closeService !== undefined) {
+      console.log('stopped table close service');
+      clearTimeout(this.closeService);
+      this.closeService = undefined;
+    }
+  }
+  /**
    * Dodaje klienta do stołu.
    * @param {Client} client dodawany klient
    */
@@ -77,10 +100,15 @@ module.exports = class Table {
       }
     }
     this.clients.push(client);
+    this.stopCloseService();
     client.ws.on('close', () => {
+      console.log(`client disconnected from board ${this.backup}`);
       const index = this.clients.indexOf(client);
       if (index > -1) {
         this.clients.splice(index, 1);
+      }
+      if (this.clients.length == 0) {
+        this.startCloseService();
       }
     });
     client.ws.on('message', async (message) => {

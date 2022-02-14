@@ -66,8 +66,20 @@ async function reloadBoard(boardId, backend, allowedUsers) {
   tables.set(boardId, future);
 }
 
+/**
+ * Wyłącza cachowanie odpowiedzi.
+ * @param {*} req otrzymane żądanie
+ * @param {*} res przygotowywana odpowiedź
+ * @param {*} next next
+ */
+function noCache(req, res, next) {
+  res.set('Cache-control', `no-store`);
+  next();
+}
+
 // http control api
 const app = express();
+app.use(noCache);
 
 app.post('/board/:boardId/load', async (req, res) => {
   const boardId = req.params.boardId;
